@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Decision Tree (ID3) - Play Golf{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/decision_tree.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<header class="page-header">
+    <h1>Decision Tree (ID3)</h1>
+    <p>Klasifikasi "Play Golf" menggunakan algoritma ID3 dan perhitungan Entropy</p>
+</header>
+
+<!-- Info Section -->
+<div class="collapsible" id="infoCollapsible">
+    <div class="collapsible-header">
+        Tentang ID3 & Entropy
+    </div>
+    <div class="collapsible-content">
+        <p>
+            <strong>ID3 (Iterative Dichotomiser 3)</strong> adalah algoritma untuk membuat pohon keputusan.
+            Algoritma ini menggunakan konsep <strong>Entropy</strong> dan <strong>Information Gain</strong>
+            untuk memilih atribut terbaik yang akan memisahkan data pada setiap langkahnya.
+        </p>
+        <div class="grid grid-2">
+            <div>
+                <h4>Entropy</h4>
+                <p>Ukuran ketidakpastian atau ketidakmurnian dalam kumpulan data. Semakin rendah nilai entropy, semakin seragam datanya.</p>
+                <code class="d-block p-2 bg-light rounded text-center mb-2">Entropy(S) = - ∑ p(x) * log2(p(x))</code>
+            </div>
+            <div>
+                <h4>Information Gain</h4>
+                <p>Pengurangan entropy yang diharapkan setelah memisahkan data berdasarkan atribut tertentu. Atribut dengan Gain tertinggi dipilih sebagai root node.</p>
+                <code class="d-block p-2 bg-light rounded text-center mb-2">Gain(S, A) = Entropy(S) - ∑ (|Sv|/|S|) * Entropy(Sv)</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Section -->
+<div class="glass-card mb-3">
+    <div class="card-header">
+        <h3>Dataset Play Golf</h3>
+    </div>
+    <div class="table-container dataset-preview">
+        <table class="table" id="datasetTable">
+            <thead>
+                <tr>
+                    <th>Outlook</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Windy</th>
+                    <th>Play Golf</th>
+                </tr>
+            </thead>
+            <tbody id="datasetBody">
+                <!-- Data loaded via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Visualization Section -->
+<div class="glass-card mb-3">
+    <div class="card-header">
+        <h3>Visualisasi Pohon Keputusan</h3>
+    </div>
+    <div class="text-center mb-3">
+        <button class="btn btn-primary" id="buildTreeBtn">
+            Build Tree
+        </button>
+    </div>
+    
+    <div class="tree-container hidden" id="treeContainer">
+        <div class="tree" id="treeVisualization">
+            <!-- Tree nodes will be rendered here -->
+        </div>
+    </div>
+</div>
+
+<!-- Step Calculation Section (Rich Feature) -->
+<div class="collapsible">
+    <div class="collapsible-header">
+        Step-by-Step Entropy Calculation
+    </div>
+    <div class="collapsible-content">
+        <div class="alert alert-info">
+            Simulasi perhitungan Entropy dan Gain. Klik tombol di bawah untuk menghitung nilai Entropy saat ini dan Gain untuk setiap atribut kandidat.
+        </div>
+        
+        <div id="calculationSteps">
+            <!-- Dynamic calculation steps -->
+        </div>
+
+        <button class="btn btn-secondary btn-block" id="startCalculationBtn">
+            Mulai Perhitungan Awal (Root Node)
+        </button>
+    </div>
+</div>
+
+<!-- Prediction Section -->
+<div class="glass-card no-hover">
+    <div class="card-header">
+        <h3>Prediksi "Play Golf"</h3>
+    </div>
+    <form id="dtPredictionForm">
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label">Outlook</label>
+                <select class="form-control" name="Outlook" required>
+                    <option value="" disabled selected>Pilih Outlook</option>
+                    <option value="Sunny">Sunny</option>
+                    <option value="Overcast">Overcast</option>
+                    <option value="Rainy">Rainy</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Temperature</label>
+                <select class="form-control" name="Temperature" required>
+                    <option value="" disabled selected>Pilih Temperature</option>
+                    <option value="Hot">Hot</option>
+                    <option value="Mild">Mild</option>
+                    <option value="Cool">Cool</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Humidity</label>
+                <select class="form-control" name="Humidity" required>
+                    <option value="" disabled selected>Pilih Humidity</option>
+                    <option value="High">High</option>
+                    <option value="Normal">Normal</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Windy</label>
+                <select class="form-control" name="Windy" required>
+                    <option value="" disabled selected>Pilih Windy</option>
+                    <option value="False">False</option>
+                    <option value="True">True</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block btn-lg mt-2">
+            Prediksi Keputusan
+        </button>
+    </form>
+    
+    <div id="dtPredictionResult" class="hidden prediction-result mt-3">
+        <h4>Keputusan:</h4>
+        <div class="prediction-class" id="dtResultValue"></div>
+        
+        <div class="prediction-path" id="dtPath">
+            <h5 class="mb-2 text-muted">Jalur Keputusan:</h5>
+            <div id="dtPathSteps"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/decision_tree.js') }}"></script>
+{% endblock %}

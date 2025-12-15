@@ -18,7 +18,7 @@
     <!-- Navigation -->
     <nav class="navbar">
         <a href="{{ url_for('index') }}" class="navbar-brand">
-            VisiKom Lab
+            Visi Komputer
         </a>
         <ul class="navbar-nav">
             <li>
@@ -29,6 +29,11 @@
             <li>
                 <a href="{{ url_for('knn_page') }}" class="nav-link {% if request.endpoint == 'knn_page' %}active{% endif %}">
                     KNN
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('decision_tree_page') }}" class="nav-link {% if request.endpoint == 'decision_tree_page' %}active{% endif %}">
+                    Decision Tree
                 </a>
             </li>
         </ul>

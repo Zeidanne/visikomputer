@@ -1,13 +1,16 @@
-from flask import Flask, render_template, request, jsonify
-import cv2
+
+import pandas as pd
 import numpy as np
+from math import log2
 from skimage.feature import graycomatrix, graycoprops
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, classification_report
 import os
+from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
+import cv2
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -27,15 +30,6 @@ def allowed_file(filename):
 def extract_glcm_features(image_path, distances, angles, levels):
     """
     Extract GLCM texture features from an image
-    
-    Parameters:
-    - image_path: path to the image file
-    - distances: list of pixel pair distance offsets
-    - angles: list of pixel pair angles in radians
-    - levels: number of gray levels
-    
-    Returns:
-    - Dictionary containing GLCM features
     """
     # Read and convert image to grayscale
     image = cv2.imread(image_path)
@@ -303,6 +297,202 @@ def knn_predict():
             'neighbors': neighbors
         })
     
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============================================================
+# DECISION TREE (PLAY GOLF) API ENDPOINTS
+# ============================================================
+
+# --- Helper Functions (Manual ID3) ---
+
+def entropy(target_col):
+    """Calculate entropy of a target column"""
+    elements, counts = np.unique(target_col, return_counts=True)
+    entropy_value = 0
+    for i in range(len(elements)):
+        probability = counts[i] / np.sum(counts)
+        entropy_value -= probability * log2(probability)
+    return round(entropy_value, 3)
+
+def info_gain(data, split_attribute_name, target_name="PlayGolf"):
+    """Calculate information gain for a split"""
+    total_entropy = entropy(data[target_name])
+    vals, counts = np.unique(data[split_attribute_name], return_counts=True)
+    
+    weighted_entropy = 0
+    subsets_entropy = {}
+    
+    for i in range(len(vals)):
+        subset = data[data[split_attribute_name] == vals[i]]
+        if len(subset) == 0: continue
+        subset_ent = entropy(subset[target_name])
+        weighted_entropy += (counts[i] / np.sum(counts)) * subset_ent
+        subsets_entropy[str(vals[i])] = subset_ent
+    
+    information_gain = total_entropy - weighted_entropy
+    return round(information_gain, 3), total_entropy, subsets_entropy
+
+def Id3(data, originaldata, features, target_attribute_name="PlayGolf", parent_node_class=None):
+    """
+    ID3 Algorithm to build Decision Tree manually
+    Returns a dictionary representing the tree
+    """
+    # 1. If all target values are the same, return that value
+    if len(np.unique(data[target_attribute_name])) <= 1:
+        return str(np.unique(data[target_attribute_name])[0])
+
+    # 2. If dataset is empty, return majority class of original data
+    elif len(data) == 0:
+        return str(np.unique(originaldata[target_attribute_name])[
+            np.argmax(np.unique(originaldata[target_attribute_name], return_counts=True)[1])
+        ])
+
+    # 3. If no features left, return majority class of parent
+    elif len(features) == 0:
+        return str(parent_node_class)
+
+    # 4. Build tree
+    else:
+        # Set default value for this node
+        parent_node_class = np.unique(data[target_attribute_name])[
+            np.argmax(np.unique(data[target_attribute_name], return_counts=True)[1])
+        ]
+        
+        # Calculate gains for all features
+        gains = [info_gain(data, feature, target_attribute_name)[0] for feature in features]
+        best_feature_index = np.argmax(gains)
+        best_feature = features[best_feature_index]
+
+        # Create tree structure
+        tree = {best_feature: {}}
+
+        # Remove best feature from features list
+        remaining_features = [f for f in features if f != best_feature]
+
+        # Add branches for each value of best feature
+        all_values = np.unique(originaldata[best_feature])
+        for value in all_values:
+            sub_data = data[data[best_feature] == value]
+            subtree = Id3(sub_data, originaldata, remaining_features, target_attribute_name, parent_node_class)
+            tree[best_feature][str(value)] = subtree
+            
+        return tree
+
+# --- Play Golf Dataset ---
+def get_play_golf_data():
+    return pd.DataFrame({
+        'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rainy', 'Rainy', 'Rainy', 'Overcast', 'Sunny',
+                    'Sunny', 'Rainy', 'Sunny', 'Overcast', 'Overcast', 'Rainy'],
+        'Temperature': ['Hot', 'Hot', 'Hot', 'Mild', 'Cool', 'Cool', 'Cool', 'Mild',
+                        'Cool', 'Mild', 'Mild', 'Mild', 'Hot', 'Mild'],
+        'Humidity': ['High', 'High', 'High', 'High', 'Normal', 'Normal', 'Normal', 'High',
+                     'Normal', 'Normal', 'Normal', 'High', 'Normal', 'High'],
+        'Windy': ['False', 'False', 'True', 'False', 'False', 'True', 'True', 'False',
+                  'False', 'False', 'True', 'True', 'False', 'True'],
+        'PlayGolf': ['No', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes', 'No',
+                     'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'No']
+    })
+
+# --- Routes ---
+
+@app.route('/decision-tree')
+def decision_tree_page():
+    return render_template('decision_tree.html')
+
+@app.route('/dt/dataset')
+def dt_dataset():
+    """Get Play Golf dataset"""
+    try:
+        df = get_play_golf_data()
+        return jsonify(df.to_dict(orient='records'))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/dt/calculate', methods=['POST'])
+def dt_calculate():
+    """
+    Calculate Entropy and Info Gain for a specific feature step
+    Used for educational purposes
+    """
+    try:
+        data = request.get_json()
+        target = data.get('target', 'PlayGolf')
+        dataset_filters = data.get('filters', {}) # To filter data for subtree calc
+        
+        df = get_play_golf_data()
+        
+        # Apply filters (simulate being at a specific node)
+        for col, val in dataset_filters.items():
+            df = df[df[col] == val]
+            
+        if len(df) == 0:
+            return jsonify({'entropy': 0, 'gains': {}})
+
+        # Calculate current entropy
+        current_entropy = entropy(df[target])
+        
+        # Calculate gain for each remaining attribute
+        features = [col for col in df.columns if col != target and col not in dataset_filters]
+        gains = {}
+        
+        for feature in features:
+            gain, _, _ = info_gain(df, feature, target)
+            gains[feature] = gain
+            
+        return jsonify({
+            'total_samples': len(df),
+            'current_entropy': current_entropy,
+            'gains': gains,
+            'features': features
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/dt/build', methods=['GET'])
+def dt_build():
+    """Build the full tree and return structure"""
+    try:
+        df = get_play_golf_data()
+        features = list(df.columns[:-1])
+        tree_structure = Id3(df, df, features)
+        return jsonify(tree_structure)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/dt/predict', methods=['POST'])
+def dt_predict():
+    """Predict using the built tree"""
+    try:
+        data = request.get_json()
+        df = get_play_golf_data()
+        features = list(df.columns[:-1])
+        
+        # Build tree
+        tree = Id3(df, df, features)
+        
+        # Traverse tree
+        prediction = None
+        current_node = tree
+        path = []
+        
+        while isinstance(current_node, dict):
+            # Get the feature to check (first key)
+            feature = list(current_node.keys())[0]
+            input_value = data.get(feature)
+            path.append({'node': feature, 'value': input_value})
+            
+            # Navigate to next node
+            if input_value in current_node[feature]:
+                current_node = current_node[feature][input_value]
+            else:
+                # Value not in tree path
+                return jsonify({'prediction': 'Unknown', 'path': path})
+                
+        prediction = current_node
+        return jsonify({'prediction': prediction, 'path': path})
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -23,10 +23,11 @@ function initCollapsibles() {
             parent.classList.toggle('active');
             
             // Toggle content height
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
+            if (parent.classList.contains('active')) {
+                // Set a large max-height to allow content to expand fully
+                content.style.maxHeight = content.scrollHeight + 500 + 'px';
             } else {
-                content.style.maxHeight = content.scrollHeight + 'px';
+                content.style.maxHeight = '0px';
             }
         });
     });
@@ -35,7 +36,7 @@ function initCollapsibles() {
     document.querySelectorAll('.collapsible.active').forEach(collapsible => {
         const content = collapsible.querySelector('.collapsible-content');
         if (content) {
-            content.style.maxHeight = content.scrollHeight + 'px';
+            content.style.maxHeight = content.scrollHeight + 500 + 'px';
         }
     });
 }
