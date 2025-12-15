@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Naive Bayes - Purchase Prediction{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/naive_bayes.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<header class="page-header">
+    <h1>Naive Bayes Classifier</h1>
+    <p>Prediksi keputusan pembelian menggunakan algoritma Naive Bayes</p>
+</header>
+
+<!-- Info Section -->
+<div class="collapsible" id="infoCollapsible">
+    <div class="collapsible-header">
+        Tentang Naive Bayes
+    </div>
+    <div class="collapsible-content">
+        <p>
+            <strong>Naive Bayes</strong> adalah algoritma klasifikasi berbasis probabilitas yang menggunakan 
+            Teorema Bayes dengan asumsi independensi antar fitur (naive assumption).
+        </p>
+        
+        <div class="formula-box">
+            P(Kelas|Fitur) = P(Fitur|Kelas) × P(Kelas) / P(Fitur)
+        </div>
+        
+        <div class="grid grid-2">
+            <div>
+                <h4>Prior Probability</h4>
+                <p>Probabilitas awal suatu kelas sebelum melihat fitur. Dihitung dari frekuensi kelas dalam dataset.</p>
+                <div class="formula-box">P(Beli) = Jumlah(Beli) / Total Data</div>
+            </div>
+            <div>
+                <h4>Likelihood</h4>
+                <p>Probabilitas fitur tertentu muncul pada kelas tertentu.</p>
+                <div class="formula-box">P(Fitur|Beli) = Count(Fitur ∩ Beli) / Count(Beli)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dataset Section -->
+<div class="glass-card mb-3">
+    <div class="card-header">
+        <h3>Dataset Pembelian</h3>
+    </div>
+    <div class="table-container">
+        <table class="table" id="datasetTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Penghasilan</th>
+                    <th>Pekerjaan</th>
+                    <th>Promo</th>
+                    <th>Beli</th>
+                </tr>
+            </thead>
+            <tbody id="datasetBody">
+                <!-- Data loaded via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Prediction Section -->
+<div class="glass-card no-hover">
+    <div class="card-header">
+        <h3>Prediksi Keputusan Pembelian</h3>
+    </div>
+    
+    <form id="nbPredictionForm">
+        <div class="grid grid-3">
+            <div class="form-group">
+                <label class="form-label">Penghasilan</label>
+                <select class="form-control" name="Penghasilan" required>
+                    <option value="Tinggi">Tinggi</option>
+                    <option value="Sedang" selected>Sedang</option>
+                    <option value="Rendah">Rendah</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pekerjaan</label>
+                <select class="form-control" name="Pekerjaan" required>
+                    <option value="PNS" selected>PNS</option>
+                    <option value="Swasta">Swasta</option>
+                    <option value="Mahasiswa">Mahasiswa</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Promo</label>
+                <select class="form-control" name="Promo" required>
+                    <option value="Ada" selected>Ada</option>
+                    <option value="Tidak">Tidak</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-2">
+            Hitung Probabilitas & Prediksi
+        </button>
+    </form>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="hidden probability-section">
+        
+        <!-- Prior Probabilities -->
+        <div class="probability-card">
+            <h5>Prior Probability P(Beli)</h5>
+            <table class="prob-table">
+                <thead>
+                    <tr>
+                        <th>Kelas</th>
+                        <th>Count</th>
+                        <th>Total</th>
+                        <th>P(Kelas)</th>
+                    </tr>
+                </thead>
+                <tbody id="priorTable">
+                    <!-- Filled by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Likelihood -->
+        <div class="probability-card">
+            <h5>Likelihood P(Fitur|Beli)</h5>
+            <div id="likelihoodDetails">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Posterior Result -->
+        <div class="posterior-result">
+            <h4>Posterior Probability</h4>
+            
+            <div class="posterior-bars">
+                <div class="posterior-bar-item">
+                    <div class="posterior-bar-label">Ya (Beli)</div>
+                    <div class="posterior-bar-container">
+                        <div class="posterior-bar-fill yes" id="barYes" style="height: 0%"></div>
+                    </div>
+                    <div class="posterior-bar-value" id="valueYes">0%</div>
+                </div>
+                <div class="posterior-bar-item">
+                    <div class="posterior-bar-label">Tidak (Beli)</div>
+                    <div class="posterior-bar-container">
+                        <div class="posterior-bar-fill no" id="barNo" style="height: 0%"></div>
+                    </div>
+                    <div class="posterior-bar-value" id="valueNo">0%</div>
+                </div>
+            </div>
+
+            <div>
+                <strong>Keputusan:</strong>
+                <div class="final-prediction" id="finalPrediction">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/naive_bayes.js') }}"></script>
+{% endblock %}

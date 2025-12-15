@@ -1,0 +1,161 @@
+/* ==========================================================================
+   Naive Bayes Specific Styles - White/Blue Theme
+   ========================================================================== */
+
+/* Probability Cards */
+.probability-section {
+    margin-top: var(--spacing-xl);
+}
+
+.probability-card {
+    background: white;
+    border: 1px solid var(--primary-100);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.probability-card h5 {
+    color: var(--primary);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--primary-100);
+}
+
+/* Prior/Likelihood Tables */
+.prob-table {
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.prob-table th,
+.prob-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: center;
+    border: 1px solid var(--primary-100);
+}
+
+.prob-table th {
+    background: var(--primary-50);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.prob-table td {
+    background: white;
+}
+
+.prob-value {
+    font-family: 'Consolas', monospace;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* Posterior Result */
+.posterior-result {
+    background: linear-gradient(135deg, var(--primary-50) 0%, white 100%);
+    border: 2px solid var(--primary-200);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    text-align: center;
+    margin-top: var(--spacing-lg);
+}
+
+.posterior-bars {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-xl);
+    margin: var(--spacing-lg) 0;
+}
+
+.posterior-bar-item {
+    text-align: center;
+    min-width: 120px;
+}
+
+.posterior-bar-label {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+}
+
+.posterior-bar-container {
+    height: 120px;
+    width: 60px;
+    background: var(--primary-100);
+    border-radius: var(--radius-md);
+    position: relative;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.posterior-bar-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: var(--radius-md);
+    transition: height 0.5s ease-out;
+}
+
+.posterior-bar-fill.yes {
+    background: linear-gradient(to top, var(--success) 0%, #34d399 100%);
+}
+
+.posterior-bar-fill.no {
+    background: linear-gradient(to top, var(--error) 0%, #f87171 100%);
+}
+
+.posterior-bar-value {
+    margin-top: var(--spacing-sm);
+    font-family: 'Consolas', monospace;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Final Prediction */
+.final-prediction {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: var(--spacing-md);
+}
+
+.final-prediction.yes {
+    color: var(--success);
+}
+
+.final-prediction.no {
+    color: var(--error);
+}
+
+/* Formula Display */
+.formula-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--primary-100);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+    font-family: 'Consolas', monospace;
+    text-align: center;
+    overflow-x: auto;
+}
+
+/* Calculation Details */
+.calc-step {
+    background: white;
+    border-left: 3px solid var(--primary);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.calc-step-title {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.calc-step-formula {
+    font-family: 'Consolas', monospace;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}

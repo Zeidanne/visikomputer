@@ -496,5 +496,105 @@ def dt_predict():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ============================================================
+# NAIVE BAYES (PURCHASE PREDICTION) API ENDPOINTS
+# ============================================================
+
+def get_naive_bayes_data():
+    """Get the purchase prediction dataset"""
+    return pd.DataFrame({
+        'Penghasilan': ['Tinggi', 'Sedang', 'Rendah', 'Tinggi', 'Sedang', 'Rendah', 'Tinggi', 'Sedang', 'Rendah', 'Tinggi'],
+        'Pekerjaan': ['PNS', 'Swasta', 'Mahasiswa', 'Swasta', 'PNS', 'PNS', 'Mahasiswa', 'Swasta', 'Swasta', 'Swasta'],
+        'Promo': ['Ada', 'Tidak', 'Ada', 'Ada', 'Tidak', 'Ada', 'Tidak', 'Ada', 'Tidak', 'Ada'],
+        'Beli': ['Ya', 'Tidak', 'Ya', 'Ya', 'Tidak', 'Ya', 'Tidak', 'Ya', 'Tidak', 'Ya']
+    })
+
+def naive_bayes_manual(df, test):
+    """
+    Manual Naive Bayes calculation
+    Returns prior, likelihood details, and posterior probabilities
+    """
+    kelas = df['Beli'].unique()
+    total_samples = len(df)
+    
+    # Calculate Prior P(Beli)
+    prior = {}
+    prior_details = {}
+    for k in kelas:
+        count_k = len(df[df['Beli'] == k])
+        prior[k] = count_k / total_samples
+        prior_details[k] = {'count': int(count_k), 'total': total_samples, 'probability': round(prior[k], 4)}
+    
+    # Calculate Likelihood P(Feature|Beli)
+    likelihood = {k: 1 for k in kelas}
+    likelihood_details = {k: {} for k in kelas}
+    
+    for feature in test.keys():
+        for k in kelas:
+            subset = df[df['Beli'] == k]
+            count_feature_value = len(subset[subset[feature] == test[feature]])
+            prob = count_feature_value / len(subset) if len(subset) > 0 else 0
+            likelihood[k] *= prob
+            likelihood_details[k][feature] = {
+                'value': test[feature],
+                'count': int(count_feature_value),
+                'total': int(len(subset)),
+                'probability': round(prob, 4)
+            }
+    
+    # Calculate Posterior P(Beli|Features) ∝ P(Beli) * P(Features|Beli)
+    posterior = {}
+    for k in kelas:
+        posterior[k] = prior[k] * likelihood[k]
+    
+    # Normalize posterior
+    total_posterior = sum(posterior.values())
+    posterior_normalized = {}
+    for k in kelas:
+        posterior_normalized[k] = round(posterior[k] / total_posterior, 4) if total_posterior > 0 else 0
+    
+    # Get prediction
+    prediction = max(posterior, key=posterior.get) if total_posterior > 0 else 'Unknown'
+    
+    return {
+        'prior': prior_details,
+        'likelihood': likelihood_details,
+        'posterior_raw': {k: round(v, 6) for k, v in posterior.items()},
+        'posterior_normalized': posterior_normalized,
+        'prediction': prediction
+    }
+
+@app.route('/naive-bayes')
+def naive_bayes_page():
+    return render_template('naive_bayes.html')
+
+@app.route('/nb/dataset')
+def nb_dataset():
+    """Get Naive Bayes dataset"""
+    try:
+        df = get_naive_bayes_data()
+        return jsonify(df.to_dict(orient='records'))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/nb/predict', methods=['POST'])
+def nb_predict():
+    """Predict using manual Naive Bayes"""
+    try:
+        data = request.get_json()
+        df = get_naive_bayes_data()
+        
+        test_case = {
+            'Penghasilan': data.get('Penghasilan'),
+            'Pekerjaan': data.get('Pekerjaan'),
+            'Promo': data.get('Promo')
+        }
+        
+        result = naive_bayes_manual(df, test_case)
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
