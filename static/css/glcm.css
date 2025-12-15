@@ -1,0 +1,169 @@
+/* ==========================================================================
+   GLCM Page Specific Styles - White/Blue Theme
+   ========================================================================== */
+
+/* GLCM Feature List */
+.glcm-features-list {
+    list-style: none;
+    padding: 0;
+}
+
+.glcm-features-list li {
+    padding: var(--spacing-sm) 0;
+    padding-left: var(--spacing-xl);
+    position: relative;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.glcm-features-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+}
+
+.glcm-features-list li strong {
+    color: var(--primary);
+}
+
+/* Parameter Cards */
+.param-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.param-item {
+    background: var(--primary-50);
+    border: 1px solid var(--primary-100);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.param-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.param-value {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* GLCM Results */
+.glcm-results {
+    margin-top: var(--spacing-xl);
+}
+
+.feature-result-card {
+    background: linear-gradient(135deg, var(--primary-50) 0%, white 100%);
+    border: 1px solid var(--primary-100);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all var(--transition-fast);
+}
+
+.feature-result-card:hover {
+    border-color: var(--primary);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.feature-name::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+}
+
+.feature-value {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 1.125rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Image Upload Area */
+.upload-area {
+    border: 2px dashed var(--primary-200);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    text-align: center;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    position: relative;
+    background: var(--primary-50);
+}
+
+.upload-area:hover {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.upload-area.dragover {
+    border-color: var(--primary);
+    background: var(--primary-100);
+    transform: scale(1.01);
+}
+
+.upload-text {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+}
+
+.upload-hint {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Image Preview */
+#preview-container {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: white;
+    border: 1px solid var(--primary-100);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+#preview-container h4 {
+    margin-bottom: var(--spacing-md);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+#preview {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+}

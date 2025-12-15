@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block title %}KNN Classification - Iris Dataset{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/knn.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<header class="page-header">
+    <h1>K-Nearest Neighbors (KNN)</h1>
+    <p>Klasifikasi menggunakan algoritma KNN dengan dataset Iris dari Scikit-learn</p>
+</header>
+
+<!-- KNN Info Section -->
+<div class="collapsible" id="infoCollapsible">
+    <div class="collapsible-header">
+        Tentang Algoritma KNN
+    </div>
+    <div class="collapsible-content">
+        <p>
+            K-Nearest Neighbors (KNN) adalah algoritma machine learning supervised yang digunakan untuk 
+            klasifikasi dan regresi. KNN bekerja dengan mencari K tetangga terdekat dari data baru 
+            dan menentukan kelas berdasarkan voting mayoritas dari tetangga tersebut.
+        </p>
+
+        <h4 class="mt-3">Cara Kerja KNN:</h4>
+        <ul class="glcm-features-list">
+            <li><strong>Hitung Jarak:</strong> Menghitung jarak antara data baru dengan semua data training</li>
+            <li><strong>Pilih K Tetangga:</strong> Memilih K data dengan jarak terdekat</li>
+            <li><strong>Voting:</strong> Menentukan kelas berdasarkan mayoritas kelas dari K tetangga</li>
+            <li><strong>Prediksi:</strong> Data baru diklasifikasikan ke kelas dengan suara terbanyak</li>
+        </ul>
+
+        <h4 class="mt-3">Dataset Iris:</h4>
+        <p>
+            Dataset Iris berisi 150 sampel bunga iris dengan 4 fitur: Sepal Length, Sepal Width, 
+            Petal Length, dan Petal Width. Terdapat 3 kelas: Setosa, Versicolor, dan Virginica.
+        </p>
+    </div>
+</div>
+
+<!-- Dataset Info -->
+<div class="glass-card mb-3">
+    <div class="card-header">
+        <h3>Informasi Dataset Iris</h3>
+    </div>
+    
+    <div class="dataset-stats" id="datasetStats">
+        <div class="stat-card">
+            <div class="stat-value">150</div>
+            <div class="stat-label">Total Samples</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">4</div>
+            <div class="stat-label">Features</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">3</div>
+            <div class="stat-label">Classes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">50</div>
+            <div class="stat-label">Per Class</div>
+        </div>
+    </div>
+
+    <!-- Dataset Preview -->
+    <div class="collapsible mt-2">
+        <div class="collapsible-header">
+            Preview Dataset (10 Sample Pertama)
+        </div>
+        <div class="collapsible-content">
+            <div class="table-container dataset-preview">
+                <table class="table" id="datasetPreview">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Sepal Length</th>
+                            <th>Sepal Width</th>
+                            <th>Petal Length</th>
+                            <th>Petal Width</th>
+                            <th>Class</th>
+                        </tr>
+                    </thead>
+                    <tbody id="datasetBody">
+                        <!-- Data will be loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Configuration -->
+<div class="glass-card no-hover mb-3">
+    <div class="card-header">
+        <h3>Konfigurasi Model</h3>
+    </div>
+
+    <form id="knnForm">
+        <!-- Feature Selection -->
+        <div class="form-group">
+            <label class="form-label">Pilih Fitur untuk Training</label>
+            <div class="feature-selection">
+                <label class="feature-checkbox">
+                    <input type="checkbox" name="features" value="0" checked>
+                    <span class="feature-label">Sepal Length (cm)</span>
+                </label>
+                <label class="feature-checkbox">
+                    <input type="checkbox" name="features" value="1" checked>
+                    <span class="feature-label">Sepal Width (cm)</span>
+                </label>
+                <label class="feature-checkbox">
+                    <input type="checkbox" name="features" value="2" checked>
+                    <span class="feature-label">Petal Length (cm)</span>
+                </label>
+                <label class="feature-checkbox">
+                    <input type="checkbox" name="features" value="3" checked>
+                    <span class="feature-label">Petal Width (cm)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- K Value Slider -->
+        <div class="k-slider-section">
+            <div class="k-slider-header">
+                <label class="form-label mb-0">Nilai K (Jumlah Tetangga)</label>
+                <div class="k-value-display">
+                    <span>K = </span>
+                    <span class="k-value-badge" id="kValueDisplay">3</span>
+                </div>
+            </div>
+            <input type="range" class="range-slider" id="kValue" name="k" 
+                   min="1" max="15" value="3" step="1">
+            <div class="k-slider-labels">
+                <span>1</span>
+                <span>5</span>
+                <span>10</span>
+                <span>15</span>
+            </div>
+        </div>
+
+        <!-- Additional Options -->
+        <div class="grid grid-2 mt-3">
+            <div class="form-group">
+                <label class="form-label" for="testSize">Test Size (%)</label>
+                <select class="form-control" id="testSize" name="test_size">
+                    <option value="0.1">10%</option>
+                    <option value="0.2" selected>20%</option>
+                    <option value="0.3">30%</option>
+                    <option value="0.4">40%</option>
+                </select>
+                <span class="form-hint">Persentase data untuk testing</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="distanceMetric">Distance Metric</label>
+                <select class="form-control" id="distanceMetric" name="metric">
+                    <option value="euclidean" selected>Euclidean</option>
+                    <option value="manhattan">Manhattan</option>
+                    <option value="minkowski">Minkowski</option>
+                </select>
+                <span class="form-hint">Metode perhitungan jarak</span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-2">
+            Train Model KNN
+        </button>
+    </form>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Training model...</p>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div id="resultsSection" class="hidden">
+    <!-- Model Metrics -->
+    <div class="glass-card mb-3">
+        <div class="card-header">
+            <h3>Hasil Training</h3>
+        </div>
+
+        <div class="metrics-grid" id="metricsGrid">
+            <div class="metric-card">
+                <div class="metric-value" id="accuracyValue">0%</div>
+                <div class="metric-label">Accuracy</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="precisionValue">0%</div>
+                <div class="metric-label">Precision</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="recallValue">0%</div>
+                <div class="metric-label">Recall</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confusion Matrix -->
+    <div class="glass-card mb-3">
+        <div class="card-header">
+            <h3>Confusion Matrix</h3>
+        </div>
+        
+        <div id="confusionMatrix" class="confusion-matrix">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <div class="chart-legend mt-3">
+            <div class="legend-item">
+                <span class="legend-dot setosa"></span>
+                <span>Setosa</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot versicolor"></span>
+                <span>Versicolor</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot virginica"></span>
+                <span>Virginica</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classification Report -->
+    <div class="glass-card mb-3">
+        <div class="card-header">
+            <h3>Classification Report</h3>
+        </div>
+        
+        <div class="table-container">
+            <table class="table" id="classificationReport">
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>F1-Score</th>
+                        <th>Support</th>
+                    </tr>
+                </thead>
+                <tbody id="reportBody">
+                    <!-- Will be populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scatter Plot -->
+    <div class="glass-card mb-3">
+        <div class="card-header">
+            <h3>Visualisasi Data</h3>
+        </div>
+        
+        <div class="grid grid-2 mb-2">
+            <div class="form-group mb-0">
+                <label class="form-label" for="xAxis">X-Axis Feature</label>
+                <select class="form-control" id="xAxis">
+                    <option value="0" selected>Sepal Length</option>
+                    <option value="1">Sepal Width</option>
+                    <option value="2">Petal Length</option>
+                    <option value="3">Petal Width</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label" for="yAxis">Y-Axis Feature</label>
+                <select class="form-control" id="yAxis">
+                    <option value="0">Sepal Length</option>
+                    <option value="1" selected>Sepal Width</option>
+                    <option value="2">Petal Length</option>
+                    <option value="3">Petal Width</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="scatterChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Prediction Section -->
+<div class="glass-card no-hover" id="predictionSection">
+    <div class="card-header">
+        <h3>Prediksi Kelas Baru</h3>
+    </div>
+
+    <form id="predictionForm">
+        <div class="prediction-inputs">
+            <div class="form-group">
+                <label class="form-label" for="sepalLength">Sepal Length</label>
+                <div class="input-with-unit">
+                    <input type="number" class="form-control" id="sepalLength" 
+                           name="sepal_length" step="0.1" min="0" max="10" 
+                           placeholder="5.1" required>
+                    <span class="input-unit">cm</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="sepalWidth">Sepal Width</label>
+                <div class="input-with-unit">
+                    <input type="number" class="form-control" id="sepalWidth" 
+                           name="sepal_width" step="0.1" min="0" max="10" 
+                           placeholder="3.5" required>
+                    <span class="input-unit">cm</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="petalLength">Petal Length</label>
+                <div class="input-with-unit">
+                    <input type="number" class="form-control" id="petalLength" 
+                           name="petal_length" step="0.1" min="0" max="10" 
+                           placeholder="1.4" required>
+                    <span class="input-unit">cm</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="petalWidth">Petal Width</label>
+                <div class="input-with-unit">
+                    <input type="number" class="form-control" id="petalWidth" 
+                           name="petal_width" step="0.1" min="0" max="10" 
+                           placeholder="0.2" required>
+                    <span class="input-unit">cm</span>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-block btn-lg mt-2" id="predictBtn" disabled>
+            Prediksi Kelas
+        </button>
+        <span class="form-hint text-center mt-1" id="predictHint">
+            Train model terlebih dahulu sebelum melakukan prediksi
+        </span>
+    </form>
+
+    <!-- Prediction Result -->
+    <div id="predictionResult" class="prediction-result hidden">
+        <h4 class="mb-2">Hasil Prediksi</h4>
+        <div class="prediction-class" id="predictedClass">
+            <!-- Class name will appear here -->
+        </div>
+        <div class="prediction-confidence">
+            <span>Confidence:</span>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+            </div>
+            <span id="confidenceValue">0%</span>
+        </div>
+
+        <div class="neighbors-info mt-3" id="neighborsInfo">
+            <h5 class="mb-2">K Nearest Neighbors:</h5>
+            <div id="neighborsList">
+                <!-- Neighbors will appear here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Section -->
+<div id="errorSection" class="hidden mt-3">
+    <div class="alert alert-error">
+        <span id="errorMessage"></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/knn.js') }}"></script>
+{% endblock %}
